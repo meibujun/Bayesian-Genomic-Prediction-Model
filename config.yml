@@ -1,0 +1,114 @@
+# BayesADME Configuration File Example
+
+# --- Input Files ---
+# Paths to your data files. Replace with actual paths.
+phenotype_file: "data/phenotypes.csv"
+additive_genotype_file: "data/additive_genotypes.csv"
+# dominance_genotype_file: "data/dominance_genotypes.csv" # Optional: Uncomment and provide if not deriving
+annotation_file: "data/annotations.csv" # Optional: Uncomment and provide if using functional annotations
+
+# --- Output Settings ---
+# Directory where results will be saved
+output_dir: "bayesadme_analysis_results"
+# Prefix for all output files (e.g., my_study_run1_)
+output_prefix: "bayesadme_sheep_traitX"
+
+# --- MCMC Settings ---
+# Total number of MCMC iterations
+num_iterations: 20000
+# Number of initial iterations to discard (burn-in period)
+burn_in: 5000
+# Interval for saving samples after burn-in (e.g., save every 10th sample)
+thinning: 10
+# Random seed for reproducibility. Use an integer or leave as null for a random run.
+random_seed: 12345
+
+# --- Model Components ---
+# Whether to derive dominance genotypes from additive genotypes (0,1,2 coding).
+# If true, dominance_genotype_file (if provided) will be ignored.
+# If false, and include_dominance is true, dominance_genotype_file is required.
+derive_dominance_from_additive: true
+# Whether to include dominance effects in the model.
+include_dominance: true
+# Whether to include additive x additive epistatic effects in the model.
+include_epistasis: true
+# include_additive is always true by the model's design and not a user-configurable option here.
+
+# --- Prior Settings for Additive Effects (BayesR-like) ---
+# Number of mixture components for additive effects (e.g., 1 zero-effect + 3 non-zero effect components).
+additive_num_mixture_components: 4
+# Fixed prior variances for each additive mixture component.
+# The first variance MUST be 0.0 (for the zero-effect component).
+# These are often expressed as proportions of total genetic variance or phenotype variance.
+prior_additive_variances_fixed: [0.0, 0.0001, 0.001, 0.01]
+# Scalar alpha parameter for the Dirichlet prior on additive mixture proportions (pi_a).
+# A value of 1.0 implies a uniform prior over the simplex (one pseudo-count per component).
+prior_additive_pi_alpha: 1.0
+
+# --- Prior Settings for Dominance Effects ---
+# Number of mixture components for dominance effects.
+dominance_num_mixture_components: 3
+# Fixed prior variances for each dominance mixture component. First must be 0.0.
+prior_dominance_variances_fixed: [0.0, 0.0001, 0.001]
+# Scalar alpha parameter for the Dirichlet prior on dominance mixture proportions (pi_d).
+prior_dominance_pi_alpha: 1.0
+
+# --- Prior Settings for Epistatic Effects (Additive x Additive interactions) ---
+# Prior probability that an epistatic effect is zero (for sparsity). Should be close to 1.
+prior_epistasis_pi0: 0.999
+# Fixed prior variance for non-zero epistatic effects.
+prior_epistasis_variance_fixed: 0.001
+
+# --- Epistasis Search Strategy ---
+# Maximum number of active epistatic interaction terms to maintain in the model at any given time.
+epistasis_max_active_pairs: 1000
+# Strategy for proposing new epistatic pairs (current options: "random").
+# Future options might include "residual_covariance" or "main_effect_guided".
+epistasis_proposal_strategy: "random"
+# Number of new SNP pairs to evaluate for inclusion in each MCMC iteration during epistasis search.
+epistasis_snp_pair_proposal_count: 100
+
+# --- Functional Annotation Settings ---
+# Whether to use functional annotations to inform priors.
+# If true, annotation_file must be provided.
+use_functional_annotations: false # Set to true if annotation_file is provided and configured below
+# Configuration for functional priors (optional, only used if use_functional_annotations is true).
+# This section allows defining category-specific prior parameters (e.g., mixture proportions).
+# 'num_annotation_categories' will be determined by the DataHandler from the annotation file.
+# functional_prior_config:
+#   # Default mixture proportions for additive effects if a category is not specified below.
+#   # Length must match additive_num_mixture_components.
+#   default_additive_pi: [0.95, 0.016, 0.017, 0.017]
+#   # List of category-specific overrides. 'name' must match a category from annotation_file.
+#   categories:
+#     - name: "genic_region" # Example category name
+#       additive_pi: [0.90, 0.03, 0.03, 0.04] # Specific mixture proportions for this category
+#       # additive_variances_scale: [1.0, 1.0, 1.1, 1.2] # Optional: Scales for default variances
+#     - name: "intergenic_region"
+#       additive_pi: [0.98, 0.005, 0.005, 0.01]
+#   # Similar configurations can be added for dominance effects if needed:
+#   # default_dominance_pi: [0.97, 0.015, 0.015]
+#   # categories:
+#   #   - name: "genic_region"
+#   #     dominance_pi: [0.92, 0.04, 0.04]
+
+# --- Other Parameters ---
+# Whether to center genotype matrices (subtract column means). Highly recommended.
+center_genotypes: true
+# Whether to scale genotype matrices (divide by column standard deviation after centering).
+# Not standard for BayesR-type models but provided as an option.
+scale_genotypes: false
+# Value used to represent missing phenotypes in the phenotype file (e.g., "NA", "NaN", or a specific number).
+missing_phenotype_value: "NA"
+# Strategy for imputing missing genotypes: "mean" (column mean) or "zero".
+genotype_missing_fill_value: "mean"
+# MAF threshold for deriving dominance genotypes. SNPs below this MAF will have dominance coding set to zero.
+# Only used if derive_dominance_from_additive is true.
+maf_threshold_for_dominance: 0.01
+# Prior parameters for the residual variance (sigma_e^2), which follows an Inverse Gamma distribution.
+# nu0 (shape parameter) for InvGamma prior of sigma_e^2. Small values for a non-informative prior.
+prior_sigma_e_nu0: 0.001
+# S0 (scale parameter) for InvGamma prior of sigma_e^2. Small values for a non-informative prior.
+prior_sigma_e_s0: 0.001
+# Number of CPU cores for parallelizable tasks (currently a placeholder for future features like parallel epistasis search).
+parallel_cores: 1
